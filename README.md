@@ -1,4 +1,4 @@
-# ResolveIQ backend
+# Codebase Intelligence Copilot Backend
 
 The backend currently contains a reusable LLM client built on the OpenAI Python SDK and configured to call OpenRouter. It supports normal completions, streamed responses, validated JSON responses, retry handling, and token-usage reporting.
 
