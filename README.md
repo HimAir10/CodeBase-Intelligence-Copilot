@@ -172,4 +172,4 @@ for text in llm_client.stream(
 
 ## Configuration
 
-`app/llm_client/config.py` stores the model configuration, request timeout, retry policy, and structured-output repair count. The current example uses `qwen/qwen3.8-27b` through OpenRouter. The timeout is passed to both completion and streaming API calls. Keep `max_tokens` modest (for example, 100–500 for short answers): requesting a very large completion can result in an OpenRouter `402` error when the available credit cannot cover it.
+`app/llm_client/config.py` stores the model configuration, request timeout, retry policy, and structured-output repair count. The current example uses `qwen/qwen3.8-27b` through OpenRouter. The timeout is passed to both completion and streaming API calls. Keep `max_tokens` modest (for example, 100–500 for short answers): requesting a very large completion can result in an OpenRouter `402` error when the available credit cannot cover it
