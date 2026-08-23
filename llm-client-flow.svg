@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="540" viewBox="0 0 1200 540" role="img" aria-labelledby="title desc">
+  <title id="title">ResolveIQ LLM client flow</title>
+  <desc id="desc">Application code calls LLMClient, which uses retries and the OpenRouter provider. The provider calls the OpenAI SDK and OpenRouter API. The client returns complete, streaming, or structured results.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#334155"/>
+    </marker>
+    <style>
+      .node { fill: #f8fafc; stroke: #334155; stroke-width: 2; }
+      .accent { fill: #e0f2fe; stroke: #0369a1; stroke-width: 2; }
+      .output { fill: #ecfdf5; stroke: #047857; stroke-width: 2; }
+      .line { fill: none; stroke: #334155; stroke-width: 2.5; marker-end: url(#arrow); }
+      .label { font-family: Arial, sans-serif; fill: #0f172a; font-size: 18px; font-weight: 700; text-anchor: middle; }
+      .detail { font-family: Arial, sans-serif; fill: #334155; font-size: 13px; text-anchor: middle; }
+      .caption { font-family: Arial, sans-serif; fill: #475569; font-size: 14px; text-anchor: middle; }
+    </style>
+  </defs>
+
+  <text x="600" y="35" class="label" font-size="24">ResolveIQ LLM Client: Request and Response Flow</text>
+
+  <rect x="35" y="105" width="150" height="82" rx="12" class="node"/>
+  <text x="110" y="139" class="label">Application</text>
+  <text x="110" y="162" class="detail">main.py / routes</text>
+
+  <rect x="245" y="105" width="165" height="82" rx="12" class="accent"/>
+  <text x="327" y="139" class="label">LLMClient</text>
+  <text x="327" y="162" class="detail">single public wrapper</text>
+
+  <rect x="470" y="105" width="165" height="82" rx="12" class="node"/>
+  <text x="552" y="139" class="label">RetryHandler</text>
+  <text x="552" y="162" class="detail">exponential backoff</text>
+
+  <rect x="695" y="105" width="185" height="82" rx="12" class="accent"/>
+  <text x="787" y="139" class="label">OpenRouterProvider</text>
+  <text x="787" y="162" class="detail">timeout + provider adapter</text>
+
+  <rect x="940" y="105" width="105" height="82" rx="12" class="node"/>
+  <text x="992" y="139" class="label">OpenAI</text>
+  <text x="992" y="162" class="detail">SDK</text>
+
+  <rect x="1050" y="300" width="120" height="82" rx="12" class="node"/>
+  <text x="1110" y="334" class="label">OpenRouter</text>
+  <text x="1110" y="357" class="detail">API</text>
+
+  <path d="M185 146 H245" class="line"/>
+  <path d="M410 146 H470" class="line"/>
+  <path d="M635 146 H695" class="line"/>
+  <path d="M880 146 H940" class="line"/>
+  <path d="M1045 146 H1110 V300" class="line"/>
+
+  <path d="M327 187 V270" class="line"/>
+  <path d="M327 270 H160 V365" class="line"/>
+  <path d="M327 270 V365" class="line"/>
+  <path d="M327 270 H495 V365" class="line"/>
+
+  <rect x="50" y="365" width="220" height="105" rx="12" class="output"/>
+  <text x="160" y="401" class="label">complete()</text>
+  <text x="160" y="425" class="detail">LLMResponse</text>
+  <text x="160" y="447" class="caption">content · model · token usage</text>
+
+  <rect x="272" y="365" width="220" height="105" rx="12" class="output"/>
+  <text x="382" y="401" class="label">stream()</text>
+  <text x="382" y="425" class="detail">text chunks</text>
+  <text x="382" y="447" class="caption">display output progressively</text>
+
+  <rect x="494" y="365" width="245" height="105" rx="12" class="output"/>
+  <text x="616" y="401" class="label">structured()</text>
+  <text x="616" y="425" class="detail">validated Pydantic result</text>
+  <text x="616" y="447" class="caption">JSON parse + repair when needed</text>
+</svg>

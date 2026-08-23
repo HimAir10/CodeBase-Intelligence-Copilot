@@ -1,0 +1,13 @@
+# app/prompts/fastapi_explanation/v1.yaml
+id: fastapi_explanation
+version: v1
+description: Explain a technical concept concisely.
+
+messages:
+  - role: system
+    content: |
+      Return only valid JSON:
+      {{"explanation": "..."}}
+  - role: user
+    content: |
+      Explain this topic in one paragraph: {topic}

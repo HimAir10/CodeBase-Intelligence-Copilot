@@ -5,14 +5,16 @@ from app.llm_client.types import LLMResponse, TokenUsage
 
 
 class OpenRouterProvider(LLMProvider):
-    def __init__(self, api_key: str, model: str):
+    def __init__(self, api_key: str, model: str, timeout : float):
         self.model = model
         self.client = OpenAI(
             base_url="https://openrouter.ai/api/v1",
             api_key=api_key,
         )
+        self.timeout = timeout
 
     def complete(self, messages, **kwargs) -> LLMResponse:
+        kwargs.setdefault("timeout", self.timeout)
         raw = self.client.chat.completions.create(
             model=self.model,
             messages=messages,
@@ -30,6 +32,7 @@ class OpenRouterProvider(LLMProvider):
         )
 
     def stream(self, messages, **kwargs):
+        kwargs.setdefault("timeout", self.timeout)
         return self.client.chat.completions.create(
             model=self.model,
             messages=messages,

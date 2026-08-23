@@ -1,13 +1,11 @@
-import os
+import json
 
-from app.llm_client.providers.base import LLMProvider
+from app.llm_client.exceptions import StructuredOutputError
 from app.llm_client.streaming import StreamingResponse
 from app.llm_client.retry import RetryHandler
 from app.llm_client.token_counter import TikTokenCounter
 from app.llm_client.structured import StructuredOutputParser
 from app.llm_client.providers.openrouter import OpenRouterProvider
-from dotenv import load_dotenv
-load_dotenv()
 
 class LLMClient:
 
@@ -19,6 +17,7 @@ class LLMClient:
         token_counter,
         structured_parser,
         timeout,
+        structured_repair_attempts,
     ):
         self.provider = provider
         self.model = model
@@ -26,6 +25,7 @@ class LLMClient:
         self.token_counter = token_counter
         self.structured_parser = structured_parser
         self.timeout = timeout
+        self.structured_repair_attempts = structured_repair_attempts
 
     def complete(self, messages, **kwargs):
 
@@ -37,24 +37,58 @@ class LLMClient:
         )
 
     def stream(self, messages, **kwargs):
-        provider_stream = self.provider.stream(messages, **kwargs)
+        provider_stream = self.retry_handler.execute(
+            lambda: self.provider.stream(messages, **kwargs)
+        )
         return StreamingResponse().process(provider_stream)
 
     def structured(self, messages, response_model, **kwargs):
         response = self.complete(messages, **kwargs)
 
-        return self.structured_parser.parse(
-            response.content,
-            response_model,
-        )
+        for attempt in range(self.structured_repair_attempts + 1):
+            try:
+                return self.structured_parser.parse(
+                    response.content,
+                    response_model,
+                )
+            except StructuredOutputError:
+                if attempt == self.structured_repair_attempts:
+                    raise
+
+                response = self.complete(
+                    self._repair_messages(response.content, response_model),
+                    **kwargs,
+                )
+
+    @staticmethod
+    def _repair_messages(invalid_content, response_model):
+        schema = json.dumps(response_model.model_json_schema(), indent=2)
+        return [
+            {
+                "role": "system",
+                "content": (
+                    "Repair the supplied LLM output. Return only valid JSON that "
+                    "conforms exactly to the supplied JSON Schema. Do not include "
+                    "Markdown, commentary, or code fences."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"JSON Schema:\n{schema}\n\n"
+                    f"Output to repair:\n{invalid_content}"
+                ),
+            },
+        ]
 
 
 
 def create_llm_client(config):
 
     provider  = OpenRouterProvider(
-        api_key = os.getenv("OPENROUTER_API_KEY"),
-        model = config.model
+        api_key=config.api_key,
+        model=config.model,
+        timeout=config.timeout,
     )
 
     
@@ -72,4 +106,5 @@ def create_llm_client(config):
         token_counter=token_counter,
         structured_parser=parser,
         timeout=config.timeout,
+        structured_repair_attempts=config.structured_repair_attempts,
     )
