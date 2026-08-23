@@ -10,7 +10,7 @@ Create and activate a virtual environment, then install the dependencies:
 cd "/Users/himanshujha/Downloads/ResolveIQ/backend "
 python3 -m venv ../venv
 source ../venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements`.txt
 ```
 
 Create a `.env` file in `backend ` (the folder currently has a trailing space) with your OpenRouter key:
