@@ -122,6 +122,42 @@ print(result.explanation)
 print(response.usage.total_tokens if response.usage else "Usage unavailable")
 ```
 
+## Versioned prompts
+
+Prompts are stored as versioned YAML assets so prompt changes can be tested, deployed, and rolled back independently of application logic. The goal is to keep every released prompt version immutable: create a new file such as `v2.yaml` instead of modifying `v1.yaml`.
+
+```text
+app/prompts/
+  fastapi_explanation/
+    v1.yaml
+    v2.yaml
+```
+
+`PromptRegistry` loads and validates a prompt by its ID and version. `render_message()` then replaces named placeholders with request-specific values.
+
+```python
+messages = render_message(
+    "fastapi_explanation",
+    "v1",
+    topic="dependency injection in FastAPI",
+)
+```
+
+For production, keep the selected version in configuration (for example, `FASTAPI_EXPLANATION_PROMPT_VERSION=v1`) rather than hardcoding it in every route. Deploy and test a new version first, switch the configuration when ready, and roll back by selecting the previous version.
+
+Prompt variables use Python's `str.format()` syntax. Escape literal JSON braces by doubling them, while leaving replacement variables as single braces:
+
+```yaml
+messages:
+  - role: system
+    content: |
+      Return only valid JSON:
+      {{"explanation": "..."}}
+  - role: user
+    content: |
+      Explain this topic in one paragraph: {topic}
+```
+
 ## Streaming
 
 `stream()` yields text fragments as the provider sends them:
