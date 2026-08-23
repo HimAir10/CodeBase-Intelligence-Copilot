@@ -1,10 +1,14 @@
-from dataclasses import dataclass, Field 
+from dataclasses import dataclass, field 
 
 @dataclass(frozen = True)
 class RetryPolicy: 
-    max_retries : int = Field(default =  3, ge = 0)
+    max_retries : int = field(default =  3)
     initial_delay : float = 1.0
     max_delay : float = 30.0
+
+    def __post_init__(self):
+        if self.max_retries < 0: 
+            raise ValueError("max_retries must be non-negative")
 
 
 import time
