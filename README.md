@@ -10,7 +10,7 @@ Create and activate a virtual environment, then install the dependencies:
 cd "/Users/himanshujha/Downloads/ResolveIQ/backend "
 python3 -m venv ../venv
 source ../venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements`.txt
 ```
 
 Create a `.env` file in `backend ` (the folder currently has a trailing space) with your OpenRouter key:
@@ -44,10 +44,14 @@ LLMClient
   └── StructuredOutputParser
 ```
 
+### Request and response flow
+
+![LLM client request and response flow](llm-client-flow.svg)
+
 - `providers/base.py` defines the provider contract: `complete()` and `stream()`.
 - `providers/openrouter.py` makes OpenRouter-specific API requests and converts normal completions to `LLMResponse`.
 - `types.py` defines the shared `LLMResponse` and `TokenUsage` data types.
-- `retry.py` retries failed completion requests using exponential backoff.
+- `retry.py` retries failed completion and stream-start requests using exponential backoff.
 - `streaming.py` extracts text deltas from streamed OpenRouter chunks.
 - `structured.py` parses model JSON into a Pydantic model.
 - `token_counter.py` estimates token count locally. For non-OpenAI models such as Qwen, it falls back to `cl100k_base`, so its count is an estimate rather than the provider's exact value.
@@ -106,7 +110,7 @@ result = llm_client.structured(
 print(result.explanation)
 ```
 
-The prompt must request valid JSON with the same fields as the Pydantic model. `StructuredOutputParser` raises `StructuredOutputError` if the response is not valid JSON or does not satisfy the schema.
+The prompt must request valid JSON with the same fields as the Pydantic model. If the first response is not valid JSON or does not satisfy the schema, `LLMClient` makes one schema-guided repair request by default. It then raises `StructuredOutputError` if the repaired response is still invalid. Configure `structured_repair_attempts` in `LLMConfig` to use zero to three repair attempts.
 
 If both structured content and token usage are needed for one request, use `complete()` and parse its content directly:
 
@@ -132,4 +136,4 @@ for text in llm_client.stream(
 
 ## Configuration
 
-`app/llm_client/config.py` stores the model configuration. The current example uses `qwen/qwen3.8-27b` through OpenRouter. Keep `max_tokens` modest (for example, 100–500 for short answers): requesting a very large completion can result in an OpenRouter `402` error when the available credit cannot cover it.
+`app/llm_client/config.py` stores the model configuration, request timeout, retry policy, and structured-output repair count. The current example uses `qwen/qwen3.8-27b` through OpenRouter. The timeout is passed to both completion and streaming API calls. Keep `max_tokens` modest (for example, 100–500 for short answers): requesting a very large completion can result in an OpenRouter `402` error when the available credit cannot cover it.
